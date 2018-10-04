@@ -33,7 +33,8 @@ def add_WMS_circulation_persona(
         stateOrProvince=None,
         postalCode=None,
         country=None,
-        note=None
+        note=None,
+        **kargs
 ):
     if not (givenName!=None or familyName!=None):
         raise Exception("at least one of givename or familyName must be used")
