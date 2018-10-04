@@ -1,0 +1,716 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://worldcat.org/xmlschemas/IDMPersonas-2.2" xmlns:mstns="http://worldcat.org/xmlschemas/IDMPersonas-2.2" targetNamespace="http://worldcat.org/xmlschemas/IDMPersonas-2.2" elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+	<!--
+	Changes in version 1.2:
+	1.  Fixed telephone has been removed from the postalAddress.  Consequently the PhysicalLocation type has been incorporated into the PostalAddress type to simplify the structure.
+	2.  The "isValid" flag on postalAddress, telephone and email has been changed to "isInvalid" to match the flag stored by the system.  This flag need now only be supplied if the element is known to be invalid.
+	3.  a "photoURL" element has been added to support inclusion of a URL referencing a photo of the patron to display in various applications.
+	4.  Notes are no longer required to have an author or last-modified date
+	5. The ability to assign a label to any contactInfo has been added.  The label element has been moved from the PostalAddress type to the contactInfo type, together with the isInvalid and verified elements
+	6. An annotation has been added to indicate that the additionalInfo element should be used to provide custom field data for patrons.
+	7. contactInfo has been made optional, although some form of contact information may be required by different WMS modules.
+
+	CHANGES IN VERSION 1.3 which became 1.6:
+	1.  Removed many elements used only for internal purposes by idm
+	2.  Changes to support ingest of ILL patron info
+	3.  Circulation expiration date has been removed - use the OCLC expiration date instead
+	4.  Given_name is no longer required
+	5.  persona.Gender is now enumerated, WAS <xs:element name="gender" type="xs:string" minOccurs="0"/> (In the DB: 0-unknown;1=male;2=female) [20160913]
+	6.  change not made
+	7.  persona.wmsCIrcPatronInfo.barcodeStatus is now enumerated, WAS <xs:element name="barcodeStatus" type="xs:string" minOccurs="0"/> [20160913]
+	8.  persona.notificationDeliveryDestination.deliveryService is now enumerated.  [20160913]
+
+	CHANGES IN VERSION 1.7-1.8
+	1. Added nickname back into the schema; it is no longer in the nameInfo structure.
+
+	CHANGES IN VERSION 2.0-2.2
+	1. Change of order so names and contact points are co-located.
+	2. MANY documentation updates including
+	a. nickname, givenName - see suggestions regarding Preferred Name policies & future editability;
+	b. SMS number formatting;
+	c. PIN length;
+	d. persona.contactInfo.label - see details about standard values;
+
+	3. Removal of unsupported elements and types including
+	a. persona.cancelledBarcode;
+	b. persona.wmsCircPatronInfo elements "claimedLostCount", "claimedReturnedCount", "claimedNeverHadCount", and "waivedAmount";
+	c. persona.wmsCircPatronInfo.barcodeStatus;
+	d. persona.contactInfo.verified.
+
+	4. persona.wmsCircPatronInfo.circRegistrationDate now a date and not a dateTime.
+
+	5. illApprovalStatus is enumerated.
+
+	6. canSelfEdit is no longer required
+
+	-->
+
+
+	<!-- Element that contains the information about the user  -->
+	<xs:element name="oclcPersonas" type="OclcPersonas"/>
+	<xs:complexType name="OclcPersonas">
+		<xs:sequence maxOccurs="unbounded">
+			<xs:element name="persona" type="Persona">
+				<xs:annotation>
+					<xs:documentation>
+						A person or entity in relationship to an authenticating OCLC
+						customer institution.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<!-- Defintion of the structure of the persona element  -->
+	<xs:complexType name="Persona">
+		<xs:sequence>
+			<xs:element name="correlationInfo" type="CorrelationInfo" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Contains the identifier for the person that will be provided
+						by a non-OCLC-managed authentication system.  OCLC requires
+						this element to allow correlation with stored OCLC user data
+						at login time.  Additionally, one or more identifiers from
+						systems other than one used for authentication may be
+						provided to enable correlation with an existing user record
+						for update as part of data ingest if a barcode or ILL
+						identifier is not provided or needs to be changed.
+
+						Correlation data, the WmsCircPatronInfo/barcode and the
+						WsILLInfo/illId are all compared against data stored in the
+						same fields in the OCLC User Data Service to determine
+						whether the record is meant to update an existing user or to
+						create a new user.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="oclcUserName" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						This is the user's login name for use only in OCLC-managed
+						authentication. This ignored if authentication for the user
+						is performed by the institution-managed IdP. Note that
+						during inital migrations the load may be using OCLC-managed
+						authentication. We recommend putting a unique identifier
+						here to ensure functionality with the OCLC provided IdP
+						before switching to the permanent IdP.
+
+						Circulation customers may request to have their OCLC
+						provided IdP configured to use WmsCircPatronInfo/barcode as
+						the username: they may then leave this blank.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="oclcExpirationDate" type="xs:dateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The date on which the access to certain OCLC-provided
+						services expires; the user will no longer be authenticated
+						throuch OCLC provided IDPs or permitted to use services such
+						as circulation or ILL after this date. This has replaced the
+						circulation and authentication specific expiration dates.
+						Note that this element will not prevent authentication
+						performed by the institution or a third party.  Note also
+						that not all OCLC services currently check for an expiration
+						date.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="nameInfo" type="NameInfo" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						This is the record of the user's name.  Institutions with
+						"preferred name policies" should consider whether the
+						library's needs may be met by loading the "givenName" field
+						with the institution's recorded perferred name for the
+						individual.
+
+						Future interfaces may use the canSelfEdit flag to allow users
+						to manage the value themselves. (Useful for systems other than
+						WMS Circulation.)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="nickname" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						This is better known as the user's "preferred name"; the use
+						of "nickname" in the schema is to simplify transitions in
+						existing ETL implementations. The "nickname" will be used to
+						replace the "givenName" and "middleName" in some
+						systems. Institutions with "preferred name policies" should
+						consider whether the library's needs may be met by loading
+						the "givenName" field with the institution's recorded
+						perferred name for the individual.
+
+						Future interfaces may allow users to manage this value
+						themselves.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="dateOfBirth" type="xs:date" minOccurs="0"/>
+			<xs:element name="gender" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="UNKNOWN"/>
+						<xs:enumeration value="MALE"/>
+						<xs:enumeration value="FEMALE"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+
+
+			<xs:element name="wmsCircPatronInfo" type="WmsCircPatronInfo" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The data elements in this element are specifically for the
+						WMS Circulation product.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="wsILLInfo" type="WsILLInfo" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The data elements in this element are used across a variety of
+						OCLC products.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="contactInfo" type="ContactInfo" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						This element contains the contact information of record as
+						determined by institution policies. Multiple instances of
+						postal address, telephone number and email address are
+						permitted.
+
+						As of 2016 WMS Circulation uses the institution data to
+						deliver notifications.
+
+						ILL services will use the separate
+						notificationDeliveryDestination element, if present, to
+						deliver notifications. If no email is present in
+						notificationDeliveryDestination, notifications by email will
+						use the institutional email.
+
+						Password reset messages will use the separate
+						notificationDeliveryDestination element, if present, to
+						deliver notifications. If no email is present in
+						notificationDeliveryDestination, notifications by email will
+						use the institutional email.
+
+						Identity Data Load updates replace all data of the type in
+						the OCLC user data system. That is, if a single email is
+						included in the update record, all email addresses in the
+						UDS will be replaced by the single email in the
+						update. Similarly for phone numbers and addresses.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="notificationDeliveryDestination" type="NotificationDeliveryDestination" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Optional. One or more destinations (e.g. email address, SMS)
+						to which notifications from various OCLC services are to be
+						delivered. These values may be updated by the end user.
+						Note that the user preferences must be expressed by the user
+						via the end user interface.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+
+			<xs:element name="note" type="Note" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						Existing notes will not be replaced or overwritten on update.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="additionalInfo" type="KeyValuePair" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>
+						This field supports the use of additional information used
+						by various OCLC products that is not otherwise specified.
+
+						For institutional use, the admin panel provides editing
+						access to four specific fields. These may be loaded by
+						creating additionalInfo elements with
+						businessContext="Circulation_Info"; keys="customdata1",
+						"customdata2", "customdata3" and "customdata4".
+						Circulation customers may customize the labels for keys
+						customdata1 through 4 via a circulation configuration interface.
+
+						Any additional information provided by the institution need
+						not have a businessContext. Institution specific data should
+						be loaded with key names that are unlikely to be used for
+						product purposes in order to decrease risk that loaded data
+						will conflict with application data.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="photoURL" type="xs:anyURI" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>
+						A URL that links to the user's photo.  This photo is displayed
+						in the WMS Admin panel and may be displayed by other OCLC
+						services.  OCLC does not currently store photos. The
+						institution may provide security for the photo by hosting it
+						on resources only available at the institution.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+
+		</xs:sequence>
+		<xs:attribute name="institutionId" use="required">
+			<xs:annotation>
+				<xs:documentation>
+					The OCLC Institution Registry id of the institution that
+					manages the user's record.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<!-- The elements and types included in the type="OclcPersonas" -->
+	<xs:complexType name="NameInfo">
+		<xs:sequence>
+			<xs:element name="prefix" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						A name prefix or salutation such as "Mrs", "Professor",
+						"Sir", etc.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="givenName" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						A first name, e.g. "Jeremiah".  Use this element if the user
+						has only one name. Note that institutions with "preferred
+						name policies" should consider whether the library's needs
+						may be met by loading the "givenName" field with the
+						institutions' recorded perferred name for the individual.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="middleName" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						A string containing one or more middle names and/or
+						initials, e.g. "Obadiah Jackenory", "O. J."
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="familyName" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						A last name or surname, e.g. "Jones"
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="suffix" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						A generation indicator such as Jr, III, and/or an epithet
+						such as PhD, FRS
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="canSelfEdit" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Indicates that a user may manage the name
+						themselves. Setting this flag to true is appropriate only
+						for data loads from systems where the user entered their
+						name and the name was not derived from a formal document or
+						official source.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="WmsCircPatronInfo">
+		<xs:sequence>
+			<xs:element name="barcode" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						This is the barcode used by WMS Circulation. ILL processes
+						store the barcode in the ILL Identifier. This value is one
+						of several that are involved in matching an incoming record
+						with an existing record for update. See documentation on the
+						matching logic.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="pin" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						May be used with the SIP/NCIP service.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="borrowerCategory" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Category of borrower (patron type) provided by library.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="circRegistrationDate" type="xs:date" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						NOTE: the 1.x schemas required a dateTime. This is now simply
+						a date.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="homeBranch" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						The OCLC Institution Registry id of the user's home branch.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isCircBlocked" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Blocked users have their library privileges suspended. Patron is not allowed to
+						borrow items.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="isCollectionExempt" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Patron fines are not moved to collections (patron is exempt from having account
+						sent to collection agency).
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="isFineExempt" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						For future functionality.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="isVerified" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Indicates whether patron's identity established via acceptable ID (driver's license, etc.)
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+
+			<xs:element name="storeCheckoutHistory" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Stores checkout history if flag is set for future functionality.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="ContactInfo">
+		<xs:sequence>
+			<xs:choice maxOccurs="unbounded">
+				<xs:element name="postalAddress" type="PostalAddress"/>
+				<xs:element name="email" type="EmailAddress"/>
+				<xs:element name="phone" type="Phone"/>
+			</xs:choice>
+			<xs:element name="label" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						A label indicating the nature or intended use of this
+						element. The administration panel provides elements stored
+						as "home","work", and "other" for all choices. The panel
+						also uses "mobile" for phone values. Dataloading of
+						alternative labels is supported, e.g "fax", and the UI
+						will display that label.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isInvalid" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						isInvalid = TRUE will prevent some OCLC processes from using
+						the contact information. E.g., a change of password email
+						will not be sent to a isInvalid = TRUE email address.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="PostalAddress">
+		<xs:sequence>
+			<xs:element name="streetAddressLine1" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						E.g., "125 Elm Street", or a house name used instead of a
+						street number: "Dunroamin".
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="streetAddressLine2" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Holds a second address line if needed.  E.g., "Apartment
+						2b", "P.O. Box 511", "Wisteria Lane", "Room 52", etc.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="cityOrLocality" type="xs:string" minOccurs="0"/>
+			<xs:element name="stateOrProvince" type="xs:string" minOccurs="0"/>
+			<xs:element name="postalCode" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						A postal or zip code in the form specified by the local
+						postal authority.  E.g. "94004", K0A 1A0", "1013 GE", "SE18
+						7QZ"
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="country" type="xs:string" minOccurs="0"/>
+			<xs:element name="isPrimary" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>An indication that this address is the
+						user's primary address.  A person may have a primary physical
+						location and a primary email and a primary
+					phone.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isPermanent" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Indicates the address is good for an indefinite period of
+						time. Not currently used by any process.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="validFrom" type="xs:dateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Not currently used by any process; not visible in the user interface.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="validTo" type="xs:dateTime" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						Not currently used by any process; not visible in the user interface.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="EmailAddress">
+		<xs:sequence>
+			<xs:element name="emailAddress" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						This should be a valid SMTP email address. OCLC does not
+						currently validate the syntax of email addresses on ingest.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isPrimary" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						An indication that this email address is the user's primary
+						email.  A person may have a primary physical location and a
+						primary email and a primary phone.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Phone">
+		<xs:sequence>
+			<xs:element name="number" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						OCLC does not currently validate the syntax of this phone
+						number on ingest.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="isPrimary" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>
+						An indication that this number is the user's primary
+						telephone.  A person may have a primary physical location
+						and a primary email and a primary phone
+					</xs:documentation>
+
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="CorrelationInfo">
+		<xs:sequence>
+			<xs:element name="sourceSystem" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						An entity id uniquely identifying the system providing
+						authentication or the system providing an additional
+						identifier for correlation - The value(s) to use should be
+						determined in consultation with the OCLC implementation
+						team.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="idAtSource" type="xs:string">
+				<xs:annotation>
+					<xs:documentation>
+						The unique identifier for the user in the source system. See
+						the documentation for the element "correlationInfo".
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="Note">
+		<xs:sequence>
+			<xs:element name="text" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>
+					Existing notes will not be replaced or overwritten on update.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:element>
+	</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="KeyValuePair">
+	<xs:sequence>
+		<xs:element name="businessContext" type="xs:string" minOccurs="0">
+			<xs:annotation>
+				<xs:documentation>
+					If present use value "Circulation_Info".
+				</xs:documentation>
+			</xs:annotation>
+		</xs:element>
+		<xs:element name="key" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>
+					If present use values, "customdata1", "customdata2", "customdata3", and "customdata4".
+				</xs:documentation>
+			</xs:annotation>
+		</xs:element>
+		<xs:element name="value" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>
+					Can match predefined values in OCLC Service Configuration or be free text (not entered
+					in OCLC Service Configuration).
+					Custom data fields from ongoing data loads that are not identical to previously-loaded
+					fields, will replace the previously-loaded value.
+					Custom data fields from ongoing data loads that are identical to previously-loaded
+					fields are ignored.
+					Custom data fields left blank in ongoing data loads are ignored and the previous value,
+					if one exists, is maintained.
+					Custom data fields can be deleted in the WorldShare Admin or Circulation modules.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:element>
+	</xs:sequence>
+</xs:complexType>
+
+
+<xs:complexType name="NotificationDeliveryDestination">
+	<xs:sequence>
+		<xs:element name="deliveryService">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="Email"/>
+					<xs:enumeration value="SMS"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:element>
+		<xs:element name="destination" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>
+					The value of destination must be an address appropriate for
+					the type of delivery service specified in
+					deliveryService. Only one value of each type is
+					supported. The current values of deliveryService are:
+					* deliveryService = "Email" with destination the user's
+					email address; and
+					* deliveryService = "SMS" with
+					destination the telephone number of the user's
+					SMS-capable device. The full international E.123 format is
+					required. e.g. "+1 232-456-7890" for a U.S. number or
+					"+44 20 4961 5678" for a UK number. If the + is missing there will
+					be errors. You may use the Admin UI's form for the SMS value to test
+					acceptable formats.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:element>
+	</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="WsILLInfo">
+	<xs:sequence>
+		<xs:element name="illId" type="xs:string" minOccurs="0">
+			<xs:annotation>
+				<xs:documentation>
+					A unique identifier for the user for ILL processes.  It may,
+					but need not be, the user's library barcode. WMS Circulation
+					customers (also) store the barcode in
+					persona.wmsCircPatronInfo.barcode.  This value is one of
+					several that are involved in matching an incoming record
+					with an existing record for update. See documentation on the
+					matching logic.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:element>
+		<xs:element name="illApprovalStatus" minOccurs="0">
+			<xs:annotation>
+				<xs:documentation>
+					This field is optional.  Allows libraries to pre-approve or
+					block patrons for ILL via the patron load or change patrons'
+					approval status for ILL.  Supported values are New, Approved,
+					or Blocked.  If value is left blank, and there is an illId
+					value in the patron file, the default value will be set to
+					"New".  If the value is left blank on an update to an existing
+					patron, the existing value set in the database will be retained.
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="Approved"/>
+					<xs:enumeration value="New"/>
+					<xs:enumeration value="Blocked"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:element>
+		<xs:element name="illPatronType" type="xs:string" minOccurs="0"/>
+		<xs:element name="illPickupLocation" type="xs:string" minOccurs="0"/>
+	</xs:sequence>
+</xs:complexType>
+
+
+</xs:schema>
