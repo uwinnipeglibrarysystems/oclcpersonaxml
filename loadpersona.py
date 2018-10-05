@@ -189,7 +189,7 @@ if __name__ == "__main__":
             familyName='Ricardo',
 
             emailAddresses=['ricardo@example.tld', 'ric@new.tld'],
-            phoneNumbers=['204-222-2222', '1-800-PIZZA-ZA'],
+            phoneNumbers=['+999-800-12345-67'],
 
             streetAddressLine1='666 example st.',
             cityOrLocality='Beverly Hills',
