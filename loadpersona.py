@@ -120,6 +120,8 @@ def add_WMS_circulation_persona(
         SubElement(postalAddress, 'streetAddressLine1').text=streetAddressLine1
         if cityOrLocality!=None:
             SubElement(postalAddress, 'cityOrLocality').text=cityOrLocality
+        if stateOrProvince!=None:
+            SubElement(postalAddress, 'stateOrProvince').text=stateOrProvince
         if postalCode!=None:
             SubElement(postalAddress, 'postalCode').text=postalCode
         if country!=None:
