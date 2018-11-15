@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# two functions here can be imported to python3 programs as well, not sure
+# about __main__ section
 
 from xml.etree.ElementTree import (
     ElementTree, Element, SubElement
@@ -15,11 +17,12 @@ def add_WMS_circulation_persona(
         borrowerCategory,
         homeBranch,
 
-        # these are optional, but some combinations are required to be
-        # used
+        # optional, but must use idAtSource and sourceSystem together
         idAtSource=None,
         sourceSystem=None,
         oclcUserName=None,
+
+        # at lease one of these must be used
         givenName=None,
         familyName=None,
 
@@ -54,35 +57,21 @@ def add_WMS_circulation_persona(
                         "or one street address must be included"
                         )
     
-
-    # either a oclcUserName is defined and idAtSource/sourceSystem are not
-    # or oclcUserName is not defined and idAtSource/sourceSystem are defined
-    if not (  (oclcUserName!=None and idAtSource==None and sourceSystem==None)
-              ^ # exclusive or operator
-              (oclcUserName==None and idAtSource!=None and sourceSystem!=None)
-            ):
-        raise Exception(
-            "either a oclcUserName should be defined and "
-            "idAtSource/sourceSystem not defined or "
-            "oclcUserName not defined and idAtSource/sourcesystem defined")
-    
     persona = SubElement(
         oclc_personas, 'persona', attrib={"institutionId": institutionId})
     
     
     if idAtSource!=None:
+        if sourceSystem==None:
+            raise Exception(
+                "sourceSystem must be defined when using idAtSource")
         correlationInfo = SubElement(persona, 'correlationInfo')
         SubElement(correlationInfo, 'sourceSystem').text=sourceSystem
         SubElement(correlationInfo, 'idAtSource').text=idAtSource
 
 
-    elif oclcUserName!=None:
+    if oclcUserName!=None:
         SubElement(persona, 'oclcUserName').text=oclcUserName
-
-    else:
-        # checks further up should ensure we process either idAtSource or
-        # oclcUserName and throw an Exception if they're both None
-        assert(False)
         
     nameInfo = SubElement(persona, 'nameInfo')
 
@@ -206,8 +195,6 @@ if __name__ == "__main__":
             borrowerCategory='P',
             homeBranch='mainBranch',
 
-            oclcUserName='123456789',
-            
             givenName='Joe',
             familyName='DiMaggio',
 
