@@ -87,11 +87,10 @@ def add_WMS_circulation_persona(
     SubElement(wmsCircPatronInfo, 'borrowerCategory').text=borrowerCategory
     SubElement(wmsCircPatronInfo, 'homeBranch').text=homeBranch
 
-    contactInfo = SubElement(persona, "contactInfo")
-
     if emailAddresses!=None:
         for i, emailAddress in enumerate(emailAddresses):
-            email = SubElement(contactInfo, 'email')
+            contactInfo_email = SubElement(persona, "contactInfo")
+            email = SubElement(contactInfo_email, 'email')
             SubElement(email, 'emailAddress').text=emailAddress
             if i == 0: # first email address is primary
                 SubElement(email, 'isPrimary').text='true'
@@ -100,12 +99,14 @@ def add_WMS_circulation_persona(
 
     if phoneNumbers!=None:
         for phoneNumber in phoneNumbers:
-            Phone = SubElement(contactInfo, 'phone')
+            contactInfo_phone = SubElement(persona, "contactInfo")
+            Phone = SubElement(contactInfo_phone, 'phone')
             SubElement(Phone, 'number').text=phoneNumber
 
 
     if streetAddressLine1!=None:
-        postalAddress = SubElement(contactInfo, 'postalAddress')
+        contactInfo_address = SubElement(persona, "contactInfo")
+        postalAddress = SubElement(contactInfo_address, 'postalAddress')
         SubElement(postalAddress, 'streetAddressLine1').text=streetAddressLine1
         if cityOrLocality!=None:
             SubElement(postalAddress, 'cityOrLocality').text=cityOrLocality
