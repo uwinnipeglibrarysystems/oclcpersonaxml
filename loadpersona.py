@@ -2,6 +2,8 @@
 # two functions here can be imported to python3 programs as well, not sure
 # about __main__ section
 
+from datetime import date, datetime
+
 from xml.etree.ElementTree import (
     ElementTree, Element, SubElement
 )
@@ -37,6 +39,7 @@ def add_WMS_circulation_persona(
         postalCode=None,
         country=None,
         note=None,
+        expiry=None,
         **kargs
 ):
     if not (givenName!=None or familyName!=None):
@@ -72,6 +75,16 @@ def add_WMS_circulation_persona(
 
     if oclcUserName!=None:
         SubElement(persona, 'oclcUserName').text=oclcUserName
+
+    if expiry!=None:
+        if isinstance(expiry, datetime):
+            pass
+        elif isinstance(expiry, date):
+            # convert to a datetime with midnight as the time of day
+            expiry = datetime.combine(expiry, datetime.min.time())
+        else:
+            raise Exception("expiry must be a date or datetime")
+        SubElement(persona, 'oclcExpirationDate').text=expiry.isoformat()
         
     nameInfo = SubElement(persona, 'nameInfo')
 
@@ -187,7 +200,7 @@ if __name__ == "__main__":
             cityOrLocality='Beverly Hills',
             stateOrProvince='California',
             postalCode='90210',
-            
+            expiry=datetime(2018,1,1,13,0)
         ),
 
         dict(
@@ -204,7 +217,8 @@ if __name__ == "__main__":
             cityOrLocality='Martinez',
             stateOrProvince='California',
             country='United States',
-            note='Our nation turns its lonely eyes to you'
+            note='Our nation turns its lonely eyes to you',
+            expiry=date(2018,1,1)
         ),
         
         
