@@ -8,6 +8,9 @@ from xml.etree.ElementTree import (
     ElementTree, Element, SubElement
 )
 
+MAX_GIVEN_NAME, MAX_FAMILY_NAME, MAX_TELEPHONE_NUM, MAX_POSTAL_CODE = (
+    50, 50, 50, 20)
+
 def add_WMS_circulation_persona(
         oclc_personas,
 
@@ -59,6 +62,23 @@ def add_WMS_circulation_persona(
                         "one phone number (list length 1) "
                         "or one street address must be included"
                         )
+
+    if postalCode != None and len(postalCode)>MAX_POSTAL_CODE:
+        raise Exception("Postal code longer than %d characters '%s'" % (
+                        MAX_POSTAL_CODE, postalCode ) )
+
+    if givenName != None and len(givenName)>MAX_GIVEN_NAME:
+        raise Exception("Given name longer than %d characters '%s'" % (
+                        MAX_GIVEN_NAME, givenName ) )
+
+    if familyName != None and len(familyName)>MAX_FAMILY_NAME:
+        raise Exception("Family name longer than %d characters '%s'" % (
+                        MAX_FAMILY_NAME, familyName) )
+
+    if phoneNumbers !=None and any( len(num)>MAX_TELEPHONE_NUM
+                                   for num in phoneNumbers ):
+        raise Exception("Phone number longer than %d characters '%s'" % (
+                        MAX_TELEPHONE_NUM, ' '.join(phoneNumbers) ) )
     
     persona = SubElement(
         oclc_personas, 'persona', attrib={"institutionId": institutionId})
