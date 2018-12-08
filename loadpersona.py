@@ -18,6 +18,10 @@ def process_address(persona,
                     stateOrProvince=None,
                     postalCode=None,
                     country=None):
+    if postalCode != None and len(postalCode)>MAX_POSTAL_CODE:
+        raise Exception("Postal code longer than %d characters '%s'" % (
+                        MAX_POSTAL_CODE, postalCode ) )
+
     contactInfo_address = SubElement(persona, "contactInfo")
     postalAddress = SubElement(contactInfo_address, 'postalAddress')
     SubElement(postalAddress, 'streetAddressLine1').text=streetAddressLine1
@@ -84,10 +88,6 @@ def add_WMS_circulation_persona(
                         "one phone number (list length 1) "
                         "or one street address must be included"
                         )
-
-    if postalCode != None and len(postalCode)>MAX_POSTAL_CODE:
-        raise Exception("Postal code longer than %d characters '%s'" % (
-                        MAX_POSTAL_CODE, postalCode ) )
 
     if givenName != None and len(givenName)>MAX_GIVEN_NAME:
         raise Exception("Given name longer than %d characters '%s'" % (
