@@ -11,6 +11,27 @@ from xml.etree.ElementTree import (
 MAX_GIVEN_NAME, MAX_FAMILY_NAME, MAX_TELEPHONE_NUM, MAX_POSTAL_CODE = (
     50, 50, 50, 20)
 
+def process_address(persona,
+                    streetAddressLine1,
+                    streetAddressLine2=None,
+                    cityOrLocality=None,
+                    stateOrProvince=None,
+                    postalCode=None,
+                    country=None):
+    contactInfo_address = SubElement(persona, "contactInfo")
+    postalAddress = SubElement(contactInfo_address, 'postalAddress')
+    SubElement(postalAddress, 'streetAddressLine1').text=streetAddressLine1
+    if streetAddressLine2!=None:
+        SubElement(postalAddress, 'streetAddressLine2').text=streetAddressLine2
+    if cityOrLocality!=None:
+        SubElement(postalAddress, 'cityOrLocality').text=cityOrLocality
+    if stateOrProvince!=None:
+        SubElement(postalAddress, 'stateOrProvince').text=stateOrProvince
+    if postalCode!=None:
+        SubElement(postalAddress, 'postalCode').text=postalCode
+    if country!=None:
+        SubElement(postalAddress, 'country').text=country
+
 def add_WMS_circulation_persona(
         oclc_personas,
 
@@ -41,6 +62,7 @@ def add_WMS_circulation_persona(
         stateOrProvince=None,
         postalCode=None,
         country=None,
+        additionalAddresses=None,
         note=None,
         expiry=None,
         **kargs
@@ -138,18 +160,20 @@ def add_WMS_circulation_persona(
 
 
     if streetAddressLine1!=None:
-        contactInfo_address = SubElement(persona, "contactInfo")
-        postalAddress = SubElement(contactInfo_address, 'postalAddress')
-        SubElement(postalAddress, 'streetAddressLine1').text=streetAddressLine1
-        if cityOrLocality!=None:
-            SubElement(postalAddress, 'cityOrLocality').text=cityOrLocality
-        if stateOrProvince!=None:
-            SubElement(postalAddress, 'stateOrProvince').text=stateOrProvince
-        if postalCode!=None:
-            SubElement(postalAddress, 'postalCode').text=postalCode
-        if country!=None:
-            SubElement(postalAddress, 'country').text=country
+        process_address(
+            persona,
+            streetAddressLine1,
+            streetAddressLine2,
+            cityOrLocality,
+            stateOrProvince,
+            postalCode,
+            country)
 
+    if None!=additionalAddresses:
+        for addr in additionalAddresses:
+            process_address(persona, **addr)
+
+            
     if note!=None:
         note_element = SubElement(persona, 'note')
         SubElement(note_element, 'text').text=note
