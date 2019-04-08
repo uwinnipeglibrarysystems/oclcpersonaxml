@@ -11,6 +11,8 @@ from xml.etree.ElementTree import (
 MAX_GIVEN_NAME, MAX_FAMILY_NAME, MAX_TELEPHONE_NUM, MAX_POSTAL_CODE = (
     50, 50, 50, 20)
 
+CIRCULATION_BUSINESS_CONTEXT="Circulation_Info"
+
 def process_address(persona,
                     streetAddressLine1,
                     streetAddressLine2=None,
@@ -69,6 +71,15 @@ def add_WMS_circulation_persona(
         additionalAddresses=None,
         note=None,
         expiry=None,
+
+        customData1=None,
+        customData2=None,
+        customData3=None,
+        customData4=None,
+        customData1BizContext=CIRCULATION_BUSINESS_CONTEXT,
+        customData2BizContext=CIRCULATION_BUSINESS_CONTEXT,
+        customData3BizContext=CIRCULATION_BUSINESS_CONTEXT,
+        customData4BizContext=CIRCULATION_BUSINESS_CONTEXT,
         **kargs
 ):
     if not (givenName!=None or familyName!=None):
@@ -178,6 +189,19 @@ def add_WMS_circulation_persona(
         note_element = SubElement(persona, 'note')
         SubElement(note_element, 'text').text=note
 
+    for i, (custom_data, biz_context) in enumerate( (
+            (customData1, customData1BizContext),
+            (customData2, customData2BizContext),
+            (customData3, customData3BizContext),
+            (customData4, customData4BizContext), ),
+            start=1):
+        if custom_data != None:
+            addinfo = SubElement(persona, 'additionalInfo')
+            if biz_context != None:
+                SubElement(addinfo, 'businessContext').text=biz_context
+            SubElement(addinfo, 'key').text=("customdata%d" % i)
+            SubElement(addinfo, 'value').text=custom_data
+
 def create_personas_element():
     return Element(
         'oclcPersonas',
@@ -262,7 +286,9 @@ if __name__ == "__main__":
             stateOrProvince='California',
             country='United States',
             note='Our nation turns its lonely eyes to you',
-            expiry=date(2018,1,1)
+            expiry=date(2018,1,1),
+
+            customData1="hello world",
         ),
         
         
