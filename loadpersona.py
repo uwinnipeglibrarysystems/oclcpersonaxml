@@ -13,6 +13,8 @@ MAX_GIVEN_NAME, MAX_FAMILY_NAME, MAX_TELEPHONE_NUM, MAX_POSTAL_CODE = (
 
 CIRCULATION_BUSINESS_CONTEXT="Circulation_Info"
 
+class OCLCPersonaException(Exception): pass
+
 def process_address(persona,
                     streetAddressLine1,
                     streetAddressLine2=None,
@@ -21,7 +23,7 @@ def process_address(persona,
                     postalCode=None,
                     country=None):
     if postalCode != None and len(postalCode)>MAX_POSTAL_CODE:
-        raise Exception("Postal code longer than %d characters '%s'" % (
+        raise OCLCPersonaException("Postal code longer than %d characters '%s'" % (
                         MAX_POSTAL_CODE, postalCode ) )
 
     contactInfo_address = SubElement(persona, "contactInfo")
@@ -87,35 +89,40 @@ def add_WMS_circulation_persona(
         **kargs
 ):
     if not (givenName!=None or familyName!=None):
-        raise Exception("at least one of givename or familyName must be used")
+        raise OCLCPersonaException(
+            "at least one of givename or familyName must be used")
 
     if (emailAddresses==None and phoneNumbers==None and
         streetAddressLine1==None):
-        raise Exception("at least an email address, phone number, or "
-                        "street address should be included")
+        raise OCLCPersonaException(
+            "at least an email address, phone number, or "
+            "street address should be included")
 
     if not  ( (isinstance(emailAddresses, list) and len(emailAddresses)>0 )
               or
               (isinstance(phoneNumbers, list) and len(phoneNumbers)>0 )
               or
               streetAddressLine1!=None ):
-        raise Exception("at least one email address (list length 1), "
-                        "one phone number (list length 1) "
-                        "or one street address must be included"
-                        )
+        raise OCLCPersonaException(
+            "at least one email address (list length 1), "
+            "one phone number (list length 1) "
+            "or one street address must be included"
+        )
 
     if givenName != None and len(givenName)>MAX_GIVEN_NAME:
-        raise Exception("Given name longer than %d characters '%s'" % (
-                        MAX_GIVEN_NAME, givenName ) )
+        raise OCLCPersonaException(
+            "Given name longer than %d characters '%s'" % (
+                MAX_GIVEN_NAME, givenName ) )
 
     if familyName != None and len(familyName)>MAX_FAMILY_NAME:
-        raise Exception("Family name longer than %d characters '%s'" % (
+        raise OCLCPersonaException("Family name longer than %d characters '%s'" % (
                         MAX_FAMILY_NAME, familyName) )
 
     if phoneNumbers !=None and any( len(num)>MAX_TELEPHONE_NUM
                                    for num in phoneNumbers ):
-        raise Exception("Phone number longer than %d characters '%s'" % (
-                        MAX_TELEPHONE_NUM, ' '.join(phoneNumbers) ) )
+        raise OCLCPersonaException(
+            "Phone number longer than %d characters '%s'" % (
+                MAX_TELEPHONE_NUM, ' '.join(phoneNumbers) ) )
     
     persona = SubElement(
         oclc_personas, 'persona', attrib={"institutionId": institutionId})
@@ -123,7 +130,7 @@ def add_WMS_circulation_persona(
     
     if idAtSource!=None:
         if sourceSystem==None:
-            raise Exception(
+            raise OCLCPersonaException(
                 "sourceSystem must be defined when using idAtSource")
         correlationInfo = SubElement(persona, 'correlationInfo')
         SubElement(correlationInfo, 'sourceSystem').text=sourceSystem
@@ -140,7 +147,7 @@ def add_WMS_circulation_persona(
             # convert to a datetime with midnight as the time of day
             expiry = datetime.combine(expiry, datetime.min.time())
         else:
-            raise Exception("expiry must be a date or datetime")
+            raise OCLCPersonaException("expiry must be a date or datetime")
         SubElement(persona, 'oclcExpirationDate').text=expiry.isoformat()
         
     nameInfo = SubElement(persona, 'nameInfo')
