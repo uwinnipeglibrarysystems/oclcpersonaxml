@@ -59,6 +59,7 @@ def add_WMS_circulation_persona(
         familyName=None,
 
         # a list of email addresses, the first will be considered primary
+        # unless email_primary is set to False
         emailAddresses=None,
         
         phoneNumbers=None,
@@ -71,6 +72,9 @@ def add_WMS_circulation_persona(
         additionalAddresses=None,
         note=None,
         expiry=None,
+
+        email_primary=True,
+        email_label=None,
 
         customData1=None,
         customData2=None,
@@ -158,10 +162,13 @@ def add_WMS_circulation_persona(
             contactInfo_email = SubElement(persona, "contactInfo")
             email = SubElement(contactInfo_email, 'email')
             SubElement(email, 'emailAddress').text=emailAddress
-            if i == 0: # first email address is primary
-                SubElement(email, 'isPrimary').text='true'
-            else:
-                SubElement(email, 'isPrimary').text='false'
+            if email_primary:
+                if i == 0: # first email address is primary
+                    SubElement(email, 'isPrimary').text='true'
+                else:
+                    SubElement(email, 'isPrimary').text='false'
+            if email_label!=None:
+                SubElement(contactInfo_email, 'label').text=email_label
 
     if phoneNumbers!=None:
         for phoneNumber in phoneNumbers:
