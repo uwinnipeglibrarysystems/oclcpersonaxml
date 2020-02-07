@@ -8,8 +8,8 @@ from xml.etree.ElementTree import (
     ElementTree, Element, SubElement
 )
 
-MAX_GIVEN_NAME, MAX_FAMILY_NAME, MAX_TELEPHONE_NUM, MAX_POSTAL_CODE = (
-    50, 50, 50, 20)
+(MAX_GIVEN_NAME, MAX_MIDDLE_NAME, MAX_FAMILY_NAME, MAX_TELEPHONE_NUM,
+ MAX_POSTAL_CODE) = (50, 100, 50, 50, 20)
 
 CIRCULATION_BUSINESS_CONTEXT="Circulation_Info"
 
@@ -59,6 +59,8 @@ def add_WMS_circulation_persona(
         # at lease one of these must be used
         givenName=None,
         familyName=None,
+
+        middleName=None,
 
         # a list of email addresses, the first will be considered primary
         # unless email_primary is set to False
@@ -118,6 +120,10 @@ def add_WMS_circulation_persona(
         raise OCLCPersonaException("Family name longer than %d characters '%s'" % (
                         MAX_FAMILY_NAME, familyName) )
 
+    if middleName != None and len(middleName)>MAX_MIDDLE_NAME:
+        raise OCLCPersonaException("Middle name longer than %d characters '%s'"
+                                   % (MAX_MIDDLE_NAME, middleName) )
+
     if phoneNumbers !=None and any( len(num)>MAX_TELEPHONE_NUM
                                    for num in phoneNumbers ):
         raise OCLCPersonaException(
@@ -154,7 +160,10 @@ def add_WMS_circulation_persona(
 
     if givenName!=None:
         SubElement(nameInfo, 'givenName').text=givenName
-    
+
+    if middleName!=None:
+        SubElement(nameInfo, 'middleName').text=middleName
+
     if familyName!=None:
         SubElement(nameInfo, 'familyName').text=familyName
 
