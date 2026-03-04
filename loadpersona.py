@@ -80,6 +80,14 @@ def add_WMS_circulation_persona(
         email_primary=True,
         email_label=None,
 
+        # None or False leads to no illId field in the output
+        # Set to True to copy the barcode
+        # Set to a value other than True, False or None to set to another
+        # value
+        # "is" keyword testing is done for True, False and None objects
+        # to avoid boolean evaluation of inputs
+        ill_id=None,
+
         customData1=None,
         customData2=None,
         customData3=None,
@@ -172,6 +180,25 @@ def add_WMS_circulation_persona(
     SubElement(wmsCircPatronInfo, 'barcode').text=barcode
     SubElement(wmsCircPatronInfo, 'borrowerCategory').text=borrowerCategory
     SubElement(wmsCircPatronInfo, 'homeBranch').text=homeBranch
+
+
+    # testing for "is" is important here as boolean evaluation of ill_id
+    # would resolve to True in case a specific ill_id is provided
+    # or in other words bool('abc')==True
+    if ill_id is True: # not the same as if ill_id:
+        ill_id_text = barcode
+    # if a specific value other than None or False is specified
+    elif ill_id is not None and ill_id is not False:
+        ill_id_text = ill_id
+    else: # do nothing when None or False, the only case remaining
+        ill_id_text = None
+        assert( ill_id is None or ill_id is False)
+
+    # in two above cases where ill_id_text is set to something other than None
+    if ill_id_text is not None:
+        ws_ill_info = SubElement(persona, 'wsILLInfo')
+        SubElement(ws_ill_info, 'illId').text=ill_id_text
+
 
     if emailAddresses!=None:
         for i, emailAddress in enumerate(emailAddresses):
@@ -291,6 +318,7 @@ if __name__ == "__main__":
             cityOrLocality='Beverly Hills',
             stateOrProvince='California',
             postalCode='90210',
+            ill_id='123ILL',
             expiry=datetime(2018,1,1,13,0)
         ),
 
@@ -310,7 +338,7 @@ if __name__ == "__main__":
             country='United States',
             note='Our nation turns its lonely eyes to you',
             expiry=date(2018,1,1),
-
+            ill_id=True, # use barcode for illid
             customData1="hello world",
         ),
         
