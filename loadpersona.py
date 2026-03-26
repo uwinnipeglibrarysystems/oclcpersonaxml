@@ -11,6 +11,9 @@ from xml.etree.ElementTree import (
 (MAX_GIVEN_NAME, MAX_MIDDLE_NAME, MAX_FAMILY_NAME, MAX_TELEPHONE_NUM,
  MAX_POSTAL_CODE) = (50, 100, 50, 50, 20)
 
+ILL_STATUS_STRINGS = ("Approved", "New", "Blocked")
+ILL_STATUS_APPROVED, ILL_STATUS_NEW, ILL_STATUS_BLOCKED = ILL_STATUS_STRINGS
+
 CIRCULATION_BUSINESS_CONTEXT="Circulation_Info"
 
 class OCLCPersonaException(Exception): pass
@@ -87,6 +90,8 @@ def add_WMS_circulation_persona(
         # "is" keyword testing is done for True, False and None objects
         # to avoid boolean evaluation of inputs
         ill_id=None,
+
+        ill_approve=None,
 
         customData1=None,
         customData2=None,
@@ -181,6 +186,9 @@ def add_WMS_circulation_persona(
     SubElement(wmsCircPatronInfo, 'borrowerCategory').text=borrowerCategory
     SubElement(wmsCircPatronInfo, 'homeBranch').text=homeBranch
 
+    # start with ws_ill_info as None so we can detect if no
+    # ill_id is set in the section below
+    ws_ill_info = None
 
     # testing for "is" is important here as boolean evaluation of ill_id
     # would resolve to True in case a specific ill_id is provided
@@ -199,6 +207,17 @@ def add_WMS_circulation_persona(
         ws_ill_info = SubElement(persona, 'wsILLInfo')
         SubElement(ws_ill_info, 'illId').text=ill_id_text
 
+
+    # if ws_ill_info was established above with an ill_id and if we
+    # have an explicit and compliant status string
+    # make an XML element for that
+    if ws_ill_info is not None and ill_approve in ILL_STATUS_STRINGS:
+        SubElement(ws_ill_info, 'illApprovalStatus').text = ill_approve
+    elif ill_approve is not None:
+        if ill_approve not in ILL_STATUS_STRINGS:
+            raise Exception("invalid ill aproval status string")
+        elif ws_ill_info is None:
+            raise Exception("ill approval status string without ill_id")
 
     if emailAddresses!=None:
         for i, emailAddress in enumerate(emailAddresses):
@@ -319,6 +338,7 @@ if __name__ == "__main__":
             stateOrProvince='California',
             postalCode='90210',
             ill_id='123ILL',
+            ill_approve=ILL_STATUS_BLOCKED,
             expiry=datetime(2018,1,1,13,0)
         ),
 
@@ -339,6 +359,7 @@ if __name__ == "__main__":
             note='Our nation turns its lonely eyes to you',
             expiry=date(2018,1,1),
             ill_id=True, # use barcode for illid
+            ill_approve=ILL_STATUS_APPROVED,
             customData1="hello world",
         ),
         
